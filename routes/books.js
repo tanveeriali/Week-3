@@ -1,18 +1,19 @@
 const { Router } = require("express");
 const router = Router();
 
-const bookDAO = require('../daos/book');
+const bookDAO = require("../daos/book");
+const authorDAO = require("../daos/book");
 
 // Create
 router.post("/", async (req, res, next) => {
   const book = req.body;
-  if (!book || JSON.stringify(book) === '{}' ) {
-    res.status(400).send('book is required');
+  if (!book || JSON.stringify(book) === "{}") {
+    res.status(400).send("book is required");
   } else {
     try {
       const savedBook = await bookDAO.create(book);
-      res.json(savedBook); 
-    } catch(e) {
+      res.json(savedBook);
+    } catch (e) {
       if (e instanceof bookDAO.BadDataError) {
         res.status(400).send(e.message);
       } else {
@@ -22,7 +23,29 @@ router.post("/", async (req, res, next) => {
   }
 });
 
-// Read - single book
+//GET book stats
+router.get("/authors/stats", async (req, res, next) => {
+  const { authorInfo } = req.query;
+  const books = await bookDAO.getStats(authorInfo);
+  if (books) {
+    res.json(books);
+  } else {
+    res.sendStatus(404);
+  }
+});
+
+//GET search
+router.get("/search", async (req, res, next) => {
+  let { page, perPage, query } = req.query;
+  const books = await bookDAO.getSearch(query);
+  if (books) {
+    res.json(books);
+  } else {
+    res.sendStatus(404);
+  }
+});
+
+// GET single book
 router.get("/:id", async (req, res, next) => {
   const book = await bookDAO.getById(req.params.id);
   if (book) {
@@ -34,24 +57,28 @@ router.get("/:id", async (req, res, next) => {
 
 // Read - all books
 router.get("/", async (req, res, next) => {
-  let { page, perPage } = req.query;
+  let { page, perPage, authorId } = req.query;
   page = page ? Number(page) : 0;
   perPage = perPage ? Number(perPage) : 10;
-  const books = await bookDAO.getAll(page, perPage);
-  res.json(books);
+  authorId = !authorId ? null : authorId;
+  const books = await bookDAO.getAll(page, perPage, authorId);
+  if (books) {
+    res.json(books);
+  } else {
+    res.sendStatus(404);
+  }
 });
 
-// Update
 router.put("/:id", async (req, res, next) => {
   const bookId = req.params.id;
   const book = req.body;
-  if (!book || JSON.stringify(book) === '{}' ) {
+  if (!book || JSON.stringify(book) === "{}") {
     res.status(400).send('book is required"');
   } else {
     try {
       const success = await bookDAO.updateById(bookId, book);
-      res.sendStatus(success ? 200 : 400); 
-    } catch(e) {
+      res.sendStatus(success ? 200 : 400);
+    } catch (e) {
       if (e instanceof bookDAO.BadDataError) {
         res.status(400).send(e.message);
       } else {
@@ -67,7 +94,7 @@ router.delete("/:id", async (req, res, next) => {
   try {
     const success = await bookDAO.deleteById(bookId);
     res.sendStatus(success ? 200 : 400);
-  } catch(e) {
+  } catch (e) {
     res.status(500).send(e.message);
   }
 });
