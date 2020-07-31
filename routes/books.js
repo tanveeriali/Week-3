@@ -2,7 +2,6 @@ const { Router } = require("express");
 const router = Router();
 
 const bookDAO = require("../daos/book");
-const authorDAO = require("../daos/book");
 
 // Create
 router.post("/", async (req, res, next) => {
