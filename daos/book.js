@@ -74,7 +74,6 @@ module.exports.getStats = async (authorInfo) => {
   }
 };
 module.exports.getSearch = async (text) => {
-  console.log(text);
   try {
     const book = Book.find(
       { $text: { $search: text } },
